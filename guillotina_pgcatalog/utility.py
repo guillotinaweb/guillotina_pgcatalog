@@ -5,12 +5,13 @@ from guillotina.interfaces import ICatalogUtility
 from guillotina.utils import get_content_path
 from guillotina.utils import get_current_request
 from guillotina_pgcatalog import schema
+from guillotina.interfaces import IInteraction
 
 import json
 import logging
 
 
-logger = logging.getLogger('guillotina_pgcatalog')
+logger = logging.getLogger('guillotina')
 
 
 @configure.utility(provides=ICatalogUtility)
@@ -30,6 +31,34 @@ class PGSearchUtility(DefaultSearchUtility):
         XXX transform into el query
         """
         pass
+
+    def get_access_where_clauses(self):
+        users = []
+        roles = []
+        request = get_current_request()
+        interaction = IInteraction(request)
+
+        for user in interaction.participations:
+            users.append(user.principal.id)
+            users.extend(user.principal.groups)
+            roles_dict = interaction.global_principal_roles(
+                user.principal.id,
+                user.principal.groups)
+            roles.extend([key for key, value in roles_dict.items()
+                          if value])
+
+        clauses = []
+        if len(users) > 0:
+            clauses.append("json->'access_users' ?| array['{}']".format(
+                "','".join(users)
+            ))
+        if len(roles) > 0:
+            clauses.append("json->'access_roles' ?| array['{}']".format(
+                "','".join(roles)
+            ))
+        return '({})'.format(
+            ' OR '.join(clauses)
+        )
 
     async def query(self, site, query, request=None):
         """
@@ -66,19 +95,25 @@ class PGSearchUtility(DefaultSearchUtility):
             site_path
         ))
 
+        access_wheres = self.get_access_where_clauses()
+
         sql = '''select zoid, json
                  from objects
                  where {}
+                    AND {}
                  order by {}
                  limit {} offset {}'''.format(
                     ' AND '.join(sql_wheres),
+                    access_wheres,
                     order,
                     limit,
                     skip)
         sql_count = '''select count(*)
                        from objects
-                       where {}'''.format(' AND '.join(sql_wheres))
+                       where {}
+                            AND {}'''.format(' AND '.join(sql_wheres), access_wheres)
 
+        logger.debug('Running search:\n{}'.format(sql))
         conn = self.get_conn()
         smt = await conn.prepare(sql)
         smt_count = await conn.prepare(sql_count)
