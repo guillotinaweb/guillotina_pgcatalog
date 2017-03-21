@@ -22,6 +22,12 @@ class BasicJsonIndex(object):
     def where(self, operator='=', arg_idx=1):
         return """json->>'{}' {} ${}::text """.format(self.name, operator, arg_idx)
 
+    def order_by(self, arg_idx=1):
+        return 'order by {}'.format(self.name)
+
+    def select(self, arg_idx=1):
+        return []
+
 
 class KeywordIndex(BasicJsonIndex):
     @property
@@ -76,9 +82,20 @@ class FullTextIndex(BasicJsonIndex):
         """
         to_tsvector('english', json->>'text') @@ to_tsquery('python & ruby')
         """
-        return """to_tsvector('english', json->>'{}') @@ to_tsquery(${}::text)""".format(
+        return """to_tsvector('english', json->>'{}') @@ plainto_tsquery(${}::text)""".format(
             self.name, arg_idx)
 
+    def order_by(self, arg_idx=1):
+        return 'order by {}_score'.format(self.name)
+
+    def select(self, arg_idx=1):
+        return [
+            '''ts_rank_cd(to_tsvector('english', json->>'{}'),
+                          plainto_tsquery(${}::text)) AS {}_score'''.format(
+                self.name,
+                arg_idx,
+                self.name)
+        ]
 
 index_mappings = {
     '*': BasicJsonIndex,
@@ -128,4 +145,5 @@ def get_indexes(invalidate=False):
 
 def get_index(name):
     indexes = get_indexes()
-    return indexes[name]
+    if name in indexes:
+        return indexes[name]

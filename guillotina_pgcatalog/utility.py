@@ -81,12 +81,20 @@ class PGSearchUtility(DefaultSearchUtility):
         except:
             skip = 0
 
+        order_index = schema.get_index(order) or schema.BasicJsonIndex(order)
+        order_arg_index = 1
+
         sql_arguments = []
         sql_wheres = []
+        select_fields = ['zoid', 'json']
         for field_name, value in query.items():
             index = schema.get_index(field_name)
             sql_arguments.append(value)
             sql_wheres.append(index.where(arg_idx=len(sql_arguments)))
+            select_fields.extend(index.select(arg_idx=len(sql_arguments)))
+
+            if field_name == index.name:
+                order_arg_index = len(sql_arguments)
 
         # ensure we only query this site
         site_path = get_content_path(site)
@@ -97,15 +105,16 @@ class PGSearchUtility(DefaultSearchUtility):
 
         access_wheres = self.get_access_where_clauses()
 
-        sql = '''select zoid, json
+        sql = '''select {}
                  from objects
                  where {}
                     AND {}
-                 order by {}
+                 {}
                  limit {} offset {}'''.format(
+                    ','.join(select_fields),
                     ' AND '.join(sql_wheres),
                     access_wheres,
-                    order,
+                    order_index.order_by(order_arg_index),
                     limit,
                     skip)
         sql_count = '''select count(*)
