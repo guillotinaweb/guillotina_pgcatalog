@@ -32,6 +32,18 @@ class BasicJsonIndex(object):
         return []
 
 
+class BooleanIndex(BasicJsonIndex):
+    @property
+    def index_sql(self):
+        return '''CREATE INDEX {} ON objects (((json->>'{}')::boolean));'''.format(
+            self.idx_name,
+            self.name
+        )
+
+    def where(self, value, operator='=', arg_idx=1):
+        return """(json->>'{}')::boolean {} ${}::boolean """.format(self.name, operator, arg_idx)
+
+
 class KeywordIndex(BasicJsonIndex):
     @property
     def index_sql(self):
@@ -118,7 +130,8 @@ index_mappings = {
     'path': PathIndex,
     'int': CastIntIndex,
     'float': CastFloatIndex,
-    'searchabletext': FullTextIndex
+    'searchabletext': FullTextIndex,
+    'boolean': BooleanIndex
 }
 
 
