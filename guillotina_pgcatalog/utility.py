@@ -88,7 +88,7 @@ class PGSearchUtility(DefaultSearchUtility):
 
         sql_arguments = []
         sql_wheres = []
-        select_fields = ['zoid', 'json']
+        select_fields = ['id', 'zoid', 'json']
         for field_name, value in query.items():
             index = schema.get_index(field_name)
             sql_arguments.append(value)
@@ -133,6 +133,7 @@ class PGSearchUtility(DefaultSearchUtility):
         results = []
         async for record in smt.cursor(*sql_arguments):
             data = json.loads(record['json'])
+            data['id'] = record['id']
             results.append(data)
         return {
             'items_count': count_result['count'],
