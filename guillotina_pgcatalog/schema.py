@@ -19,11 +19,14 @@ class BasicJsonIndex(object):
             self.name
         )
 
-    def where(self, operator='=', arg_idx=1):
+    def where(self, value, operator='=', arg_idx=1):
         return """json->>'{}' {} ${}::text """.format(self.name, operator, arg_idx)
 
-    def order_by(self, arg_idx=1):
-        return 'order by {}'.format(self.name)
+    def order_by(self, arg_idx=1, reversed=False):
+        type_ = 'ASC'
+        if reversed:
+            type_ = 'DESC'
+        return "order by json->>'{}' {}".format(self.name, type_)
 
     def select(self, arg_idx=1):
         return []
@@ -37,8 +40,15 @@ class KeywordIndex(BasicJsonIndex):
             self.name
         )
 
-    def where(self, operator='?', arg_idx=1):
+    def where(self, value, operator='?', arg_idx=1):
         return """json->'{}' {} ${}::text """.format(self.name, operator, arg_idx)
+
+
+class PathIndex(BasicJsonIndex):
+
+    def where(self, value, operator='=', arg_idx=1):
+        return """substring(json->>'{}', 0, {}) {} ${}::text """.format(
+            self.name, len(value) + 1, operator, arg_idx)
 
 
 class CastIntIndex(BasicJsonIndex):
@@ -53,7 +63,7 @@ class CastIntIndex(BasicJsonIndex):
             self.cast_type
         )
 
-    def where(self, operator='>', arg_idx=1):
+    def where(self, value, operator='>', arg_idx=1):
         """
         where CAST(json->>'favorite_count' AS integer) > 5;
         """
@@ -78,15 +88,18 @@ class FullTextIndex(BasicJsonIndex):
             self.name
         )
 
-    def where(self, operator='', arg_idx=1):
+    def where(self, value, operator='', arg_idx=1):
         """
         to_tsvector('english', json->>'text') @@ to_tsquery('python & ruby')
         """
         return """to_tsvector('english', json->>'{}') @@ plainto_tsquery(${}::text)""".format(
             self.name, arg_idx)
 
-    def order_by(self, arg_idx=1):
-        return 'order by {}_score'.format(self.name)
+    def order_by(self, arg_idx=1, reversed=False):
+        type_ = 'ASC'
+        if reversed:
+            type_ = 'DESC'
+        return 'order by {}_score {}'.format(self.name, type_)
 
     def select(self, arg_idx=1):
         return [
@@ -97,9 +110,12 @@ class FullTextIndex(BasicJsonIndex):
                 self.name)
         ]
 
+
 index_mappings = {
     '*': BasicJsonIndex,
     'keyword': KeywordIndex,
+    'textkeyword': KeywordIndex,
+    'path': PathIndex,
     'int': CastIntIndex,
     'float': CastFloatIndex,
     'searchabletext': FullTextIndex

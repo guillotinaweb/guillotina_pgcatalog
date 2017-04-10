@@ -72,17 +72,19 @@ class PGSearchUtility(DefaultSearchUtility):
             limit = int(query.pop('limit', 20))
         except:
             limit = 20
+        limit = min(limit, 100)
         page = query.pop('page', 1)
-        order = query.pop('order', 'zoid')  # need some ordering to ensure paging works
-        if order not in [k for k in schema.get_indexes().keys()] + ['zoid']:
-            order = 'zoid'
+        order_by = query.pop('order_by', 'zoid')  # need some ordering to ensure paging works
+        sort_reversed = query.pop('reversed', False)
+        if order_by not in [k for k in schema.get_indexes().keys()] + ['zoid']:
+            order_by = 'zoid'
         try:
             skip = (int(page) - 1) * limit
         except:
             skip = 0
 
-        order_index = schema.get_index(order) or schema.BasicJsonIndex(order)
-        order_arg_index = 1
+        order_by_index = schema.get_index(order_by) or schema.BasicJsonIndex(order_by)
+        order_by_arg_index = 1
 
         sql_arguments = []
         sql_wheres = []
@@ -90,11 +92,11 @@ class PGSearchUtility(DefaultSearchUtility):
         for field_name, value in query.items():
             index = schema.get_index(field_name)
             sql_arguments.append(value)
-            sql_wheres.append(index.where(arg_idx=len(sql_arguments)))
+            sql_wheres.append(index.where(value, arg_idx=len(sql_arguments)))
             select_fields.extend(index.select(arg_idx=len(sql_arguments)))
 
             if field_name == index.name:
-                order_arg_index = len(sql_arguments)
+                order_by_arg_index = len(sql_arguments)
 
         # ensure we only query this site
         site_path = get_content_path(site)
@@ -114,7 +116,7 @@ class PGSearchUtility(DefaultSearchUtility):
                     ','.join(select_fields),
                     ' AND '.join(sql_wheres),
                     access_wheres,
-                    order_index.order_by(order_arg_index),
+                    order_by_index.order_by(order_by_arg_index, sort_reversed),
                     limit,
                     skip)
         sql_count = '''select count(*)
@@ -135,7 +137,8 @@ class PGSearchUtility(DefaultSearchUtility):
         return {
             'items_count': count_result['count'],
             'member': results,
-            'page': page
+            'page': page,
+            'limit': limit
         }
 
     def get_conn(self):
