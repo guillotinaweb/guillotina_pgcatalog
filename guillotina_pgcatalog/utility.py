@@ -21,7 +21,7 @@ class PGSearchUtility(DefaultSearchUtility):
     operations can be ignored
     """
 
-    def get_data(self, content):
+    async def get_data(self, content):
         # we can override and ignore this request since data is already
         # stored in db...
         return {}
