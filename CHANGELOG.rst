@@ -1,4 +1,4 @@
-1.0.1 (unreleased)
+1.0.1 (2017-04-12)
 ------------------
 
 - fix get_data not using correct signature for latest guillotina
