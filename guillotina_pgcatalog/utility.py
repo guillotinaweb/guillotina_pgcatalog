@@ -2,10 +2,11 @@
 from guillotina import configure
 from guillotina.catalog.catalog import DefaultSearchUtility
 from guillotina.interfaces import ICatalogUtility
+from guillotina.interfaces import IInteraction
+from guillotina.transactions import get_transaction
 from guillotina.utils import get_content_path
 from guillotina.utils import get_current_request
 from guillotina_pgcatalog import schema
-from guillotina.interfaces import IInteraction
 
 import json
 import logging
@@ -74,7 +75,8 @@ class PGSearchUtility(DefaultSearchUtility):
             limit = 20
         limit = min(limit, 100)
         page = query.pop('page', 1)
-        order_by = query.pop('order_by', 'zoid')  # need some ordering to ensure paging works
+        # need some ordering to ensure paging works
+        order_by = query.pop('order_by', 'zoid')
         sort_reversed = query.pop('reversed', False)
         if order_by not in [k for k in schema.get_indexes().keys()] + ['zoid']:
             order_by = 'zoid'
@@ -83,7 +85,8 @@ class PGSearchUtility(DefaultSearchUtility):
         except:
             skip = 0
 
-        order_by_index = schema.get_index(order_by) or schema.BasicJsonIndex(order_by)
+        order_by_index = (
+            schema.get_index(order_by) or schema.BasicJsonIndex(order_by))
         order_by_arg_index = 1
 
         sql_arguments = []
@@ -122,7 +125,8 @@ class PGSearchUtility(DefaultSearchUtility):
         sql_count = '''select count(*)
                        from objects
                        where {}
-                            AND {}'''.format(' AND '.join(sql_wheres), access_wheres)
+                            AND {}'''.format(
+            ' AND '.join(sql_wheres), access_wheres)
 
         logger.debug('Running search:\n{}'.format(sql))
         conn = self.get_conn()
@@ -143,8 +147,8 @@ class PGSearchUtility(DefaultSearchUtility):
         }
 
     def get_conn(self):
-        request = get_current_request()
-        return request._tm._txn._db_conn
+        txn = get_transaction()
+        return txn._db_conn
 
     async def index(self, site, datas):
         pass
@@ -155,5 +159,6 @@ class PGSearchUtility(DefaultSearchUtility):
     async def initialize_catalog(self, site):
         conn = self.get_conn()
         for name, index in schema.get_indexes().items():
-            await conn.execute('''DROP INDEX IF EXISTS {}'''.format(index.idx_name))
+            await conn.execute('''DROP INDEX IF EXISTS {}'''.format(
+                index.idx_name))
             await conn.execute(index.index_sql)

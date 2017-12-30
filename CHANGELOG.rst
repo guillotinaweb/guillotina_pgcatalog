@@ -1,7 +1,8 @@
 1.0.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix getting transaction when creating catalog
+  [vangheem]
 
 
 1.0.1 (2017-04-12)
