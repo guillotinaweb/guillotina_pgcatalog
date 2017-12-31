@@ -1,6 +1,6 @@
 from guillotina.catalog.utils import get_index_fields
-from guillotina.content import IResourceFactory
 from guillotina.component import getUtilitiesFor
+from guillotina.content import IResourceFactory
 
 
 class BasicJsonIndex(object):
@@ -20,7 +20,8 @@ class BasicJsonIndex(object):
         )
 
     def where(self, value, operator='=', arg_idx=1):
-        return """json->>'{}' {} ${}::text """.format(self.name, operator, arg_idx)
+        return """json->>'{}' {} ${}::text """.format(
+            self.name, operator, arg_idx)
 
     def order_by(self, arg_idx=1, reversed=False):
         type_ = 'ASC'
@@ -35,25 +36,27 @@ class BasicJsonIndex(object):
 class BooleanIndex(BasicJsonIndex):
     @property
     def index_sql(self):
-        return '''CREATE INDEX {} ON objects (((json->>'{}')::boolean));'''.format(
+        return '''CREATE INDEX {} ON objects (((json->>'{}')::boolean));'''.format(  # noqa
             self.idx_name,
             self.name
         )
 
     def where(self, value, operator='=', arg_idx=1):
-        return """(json->>'{}')::boolean {} ${}::boolean """.format(self.name, operator, arg_idx)
+        return """(json->>'{}')::boolean {} ${}::boolean """.format(
+            self.name, operator, arg_idx)
 
 
 class KeywordIndex(BasicJsonIndex):
     @property
     def index_sql(self):
-        return '''CREATE INDEX {} ON objects USING gin ((json->'{}'))'''.format(
+        return '''CREATE INDEX {} ON objects USING gin ((json->'{}'))'''.format(  # noqa
             self.idx_name,
             self.name
         )
 
     def where(self, value, operator='?', arg_idx=1):
-        return """json->'{}' {} ${}::text """.format(self.name, operator, arg_idx)
+        return """json->'{}' {} ${}::text """.format(
+            self.name, operator, arg_idx)
 
 
 class PathIndex(BasicJsonIndex):
@@ -104,7 +107,7 @@ class FullTextIndex(BasicJsonIndex):
         """
         to_tsvector('english', json->>'text') @@ to_tsquery('python & ruby')
         """
-        return """to_tsvector('english', json->>'{}') @@ plainto_tsquery(${}::text)""".format(
+        return """to_tsvector('english', json->>'{}') @@ plainto_tsquery(${}::text)""".format(  # noqa
             self.name, arg_idx)
 
     def order_by(self, arg_idx=1, reversed=False):

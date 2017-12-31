@@ -94,8 +94,13 @@ class PGSearchUtility(DefaultSearchUtility):
         select_fields = ['id', 'zoid', 'json']
         for field_name, value in query.items():
             index = schema.get_index(field_name)
+            kwargs = {}
+            if isinstance(value, dict):
+                kwargs['operator'] = value.get('operator', None)
+                value = value.get('value', None)
             sql_arguments.append(value)
-            sql_wheres.append(index.where(value, arg_idx=len(sql_arguments)))
+            sql_wheres.append(index.where(
+                value, arg_idx=len(sql_arguments), **kwargs))
             select_fields.extend(index.select(arg_idx=len(sql_arguments)))
 
             if field_name == index.name:
@@ -135,7 +140,7 @@ class PGSearchUtility(DefaultSearchUtility):
         count_result = await smt_count.fetchrow(*sql_arguments)
 
         results = []
-        async for record in smt.cursor(*sql_arguments):
+        for record in await smt.fetch(*sql_arguments):
             data = json.loads(record['json'])
             data['id'] = record['id']
             results.append(data)

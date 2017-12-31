@@ -1,7 +1,7 @@
 1.0.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Be able to provide operator in queries
 
 
 1.0.2 (2017-12-30)

@@ -12,10 +12,10 @@ This is just a proof of concept right now.
 
 What is does right now:
 
-- provides indexes for basic types
+- provides indexes for basic types(not all, dates not supported)
 - works with the POST @search endpoint
 
 
-What it does *not* do:
-
-- check security of what is being queried
+POST /db/container/@search {
+  "tag": "foobar"
+}
