@@ -71,7 +71,7 @@ class PGSearchUtility(DefaultSearchUtility):
         # placeholders for it.
         try:
             limit = int(query.pop('limit', 20))
-        except:
+        except Exception:
             limit = 20
         limit = min(limit, 100)
         page = query.pop('page', 1)
@@ -82,7 +82,7 @@ class PGSearchUtility(DefaultSearchUtility):
             order_by = 'zoid'
         try:
             skip = (int(page) - 1) * limit
-        except:
+        except Exception:
             skip = 0
 
         order_by_index = (
@@ -127,25 +127,16 @@ class PGSearchUtility(DefaultSearchUtility):
                     order_by_index.order_by(order_by_arg_index, sort_reversed),
                     limit,
                     skip)
-        sql_count = '''select count(*)
-                       from objects
-                       where {}
-                            AND {}'''.format(
-            ' AND '.join(sql_wheres), access_wheres)
 
         logger.debug('Running search:\n{}'.format(sql))
         conn = self.get_conn()
-        smt = await conn.prepare(sql)
-        smt_count = await conn.prepare(sql_count)
-        count_result = await smt_count.fetchrow(*sql_arguments)
 
         results = []
-        for record in await smt.fetch(*sql_arguments):
+        for record in await conn.fetch(sql, *sql_arguments):
             data = json.loads(record['json'])
             data['id'] = record['id']
             results.append(data)
         return {
-            'items_count': count_result['count'],
             'member': results,
             'page': page,
             'limit': limit
@@ -153,7 +144,15 @@ class PGSearchUtility(DefaultSearchUtility):
 
     def get_conn(self):
         txn = get_transaction()
-        return txn._db_conn
+        conn = txn._db_conn
+        try:
+            conn._con._stmt_cache.clear()
+        except Exception:
+            try:
+                conn._stmt_cache.clear()
+            except Exception:
+                pass
+        return conn
 
     async def index(self, site, datas):
         pass

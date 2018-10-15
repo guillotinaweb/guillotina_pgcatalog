@@ -1,7 +1,9 @@
 1.0.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Do not provide total result. count queries are really slow
+  with pg.
+  [vangheem]
 
 
 1.0.3 (2017-12-30)
