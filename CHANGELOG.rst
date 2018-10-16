@@ -1,4 +1,4 @@
-1.0.4 (unreleased)
+1.0.4 (2018-10-15)
 ------------------
 
 - Do not provide total result. count queries are really slow
