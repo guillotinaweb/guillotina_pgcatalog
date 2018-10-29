@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='guillotina_pgcatalog',
-    version='1.0.5.dev0',
+    version='1.0.5',
     description='basic catalog implementation for guillotina on postgres',  # noqa
     long_description=(open('README.rst').read() + '\n' +
                       open('CHANGELOG.rst').read()),
