@@ -162,7 +162,8 @@ class PGSearchUtility(DefaultSearchUtility):
 
     async def initialize_catalog(self, site):
         conn = self.get_conn()
-        for name, index in schema.get_indexes().items():
-            await conn.execute('''DROP INDEX IF EXISTS {}'''.format(
-                index.idx_name))
-            await conn.execute(index.index_sql)
+        if conn is not None:
+            for name, index in schema.get_indexes().items():
+                await conn.execute('''DROP INDEX IF EXISTS {}'''.format(
+                    index.idx_name))
+                await conn.execute(index.index_sql)

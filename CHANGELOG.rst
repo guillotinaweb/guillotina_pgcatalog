@@ -1,7 +1,8 @@
 1.0.5 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix potential errors in tests
+  [vangheem]
 
 
 1.0.4 (2018-10-15)
