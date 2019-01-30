@@ -1,6 +1,7 @@
 from guillotina import configure
 
 app_settings = {
+    'store_json': True
 }
 
 

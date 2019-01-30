@@ -129,7 +129,8 @@ class PGSearchUtility(DefaultSearchUtility):
                     skip)
 
         logger.debug('Running search:\n{}'.format(sql))
-        conn = self.get_conn()
+        txn = get_transaction()
+        conn = await txn.get_connection()
 
         results = []
         for record in await conn.fetch(sql, *sql_arguments):
@@ -142,18 +143,6 @@ class PGSearchUtility(DefaultSearchUtility):
             'limit': limit
         }
 
-    def get_conn(self):
-        txn = get_transaction()
-        conn = txn._db_conn
-        try:
-            conn._con._stmt_cache.clear()
-        except Exception:
-            try:
-                conn._stmt_cache.clear()
-            except Exception:
-                pass
-        return conn
-
     async def index(self, site, datas):
         pass
 
@@ -161,7 +150,8 @@ class PGSearchUtility(DefaultSearchUtility):
         pass
 
     async def initialize_catalog(self, site):
-        conn = self.get_conn()
+        txn = get_transaction()
+        conn = await txn.get_connection()
         if conn is not None:
             for name, index in schema.get_indexes().items():
                 await conn.execute('''DROP INDEX IF EXISTS {}'''.format(
