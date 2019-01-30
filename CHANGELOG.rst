@@ -1,7 +1,8 @@
 1.0.6 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix for latest guillotina
+  [vangheem]
 
 
 1.0.5 (2018-10-29)
