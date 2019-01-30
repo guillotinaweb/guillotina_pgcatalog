@@ -40,7 +40,8 @@ setup(
             'requests',
             'psycopg2',
             'pytest-asyncio',
-            'pytest-aiohttp'
+            'pytest-aiohttp',
+            'pytest-docker-fixtures'
         ]
     },
     entry_points={
