@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-from guillotina import configure
 from guillotina.catalog.catalog import DefaultSearchUtility
-from guillotina.interfaces import ICatalogUtility
 from guillotina.interfaces import IInteraction
 from guillotina.transactions import get_transaction
 from guillotina.utils import get_content_path
@@ -15,7 +13,6 @@ import logging
 logger = logging.getLogger('guillotina')
 
 
-@configure.utility(provides=ICatalogUtility)
 class PGSearchUtility(DefaultSearchUtility):
     """
     Indexes are transparently maintained in the database so all indexing
