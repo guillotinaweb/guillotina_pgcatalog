@@ -1,7 +1,7 @@
 1.0.7 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- restrict compat version
 
 
 1.0.6 (2019-01-30)

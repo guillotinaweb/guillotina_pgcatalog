@@ -29,7 +29,7 @@ setup(
     include_package_data=True,
     packages=find_packages(),
     install_requires=[
-        'guillotina>=4.5.0'
+        'guillotina>=4.5.0,<5'
     ],
     extras_require={
         'test': [

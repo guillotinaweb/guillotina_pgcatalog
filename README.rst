@@ -1,6 +1,8 @@
 Introduction
 ============
 
+WARNING: Guillotina 5 has this functionality integrated into core
+
 Basic catalog implementation for guillotina using the default postgresql
 server.
 
